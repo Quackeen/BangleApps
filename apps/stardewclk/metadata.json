@@ -1,0 +1,20 @@
+{ "id": "stardewclk",
+  "name": "Stardew Clock",
+  "shortName": "Stardew",
+  "version": "0.01",
+  "author": "Quackeen",
+  "description": "A clock styled on the Stardew Valley HUD: a day/night dial, date, weather, season, daily luck, and your steps counted as gold.",
+  "icon": "app.png",
+  "screenshots": [{"url":"screenshot.png"}],
+  "type": "clock",
+  "tags": "clock",
+  "supports": ["BANGLEJS2"],
+  "readme": "README.md",
+  "allow_emulator": true,
+  "storage": [
+    {"name":"stardewclk.app.js","url":"app.js"},
+    {"name":"stardewclk.bg.img","url":"bg.js","evaluate":true},
+    {"name":"stardewclk.icons","url":"icons.js","evaluate":true},
+    {"name":"stardewclk.img","url":"app-icon.js","evaluate":true}
+  ]
+}
