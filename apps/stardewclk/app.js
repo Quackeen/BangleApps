@@ -1,19 +1,23 @@
 // Stardew Clock: a watch face styled on the Stardew Valley HUD.
-// Artwork is in stardewclk.bg.img (full screen) and stardewclk.icons
-// (13 raw 16x16 3bpp icons); see README.md for how they were made.
+// Artwork is in stardewclk.bg0.img/bg1.img (full-screen backgrounds:
+// mountains, farm) and stardewclk.icons (13 raw 16x16 3bpp icons); see
+// README.md for how they were made.
 {
   const storage = require("Storage");
   const locale = require("locale");
   require("Font8x16").add(Graphics);
 
   // Layout, matching the artwork
-  const PIVOT_X = 62, PIVOT_Y = 48, HAND_LEN = 36;
-  const DATE_X = 116, DATE_Y = 18;
-  const WEATHER_X = 67, SEASON_X = 119, LUCK_X = 148, ICON_Y = 34;
-  const TIME_X0 = 64, TIME_X1 = 168, TIME_Y = 73;
-  const GOLD_X = 32, GOLD_Y = 114, DIGIT_W = 17, DIGITS = 8;
+  const PIVOT_X = 46, PIVOT_Y = 46, HAND_LEN = 34;
+  const DATE_X = 97, DATE_Y = 18;
+  const WEATHER_X = 51, SEASON_X = 97, LUCK_X = 125, ICON_Y = 34;
+  const TIME_X0 = 48, TIME_X1 = 145, TIME_Y = 73;
+  const GOLD_X = 31, GOLD_Y = 114, DIGIT_W = 16, DIGITS = 7;
+  const ENERGY_X0 = 160, ENERGY_X1 = 168, ENERGY_Y0 = 28, ENERGY_Y1 = 121;
 
   let is12Hour = (storage.readJSON("setting.json", 1) || {})["12hour"];
+  let settings = storage.readJSON("stardewclk.json", 1) || {};
+  let bgFile = "stardewclk.bg" + (settings.bg | 0) + ".img";
   let drawTimeout;
 
   let icon = function(n, x, y) {
@@ -56,7 +60,7 @@
 
   let draw = function() {
     let d = new Date();
-    g.reset().drawImage(storage.read("stardewclk.bg.img"), 0, 0);
+    g.reset().drawImage(storage.read(bgFile), 0, 0);
     drawHand(d);
 
     // Date
@@ -69,32 +73,36 @@
       icon(weatherIcon(weather.code), WEATHER_X, ICON_Y + 3);
       // "22°C" -> "22", the unit won't fit
       g.setColor(1, 1, 1).setFont("8x16").setFontAlign(0, 0);
-      g.drawString(locale.temp(weather.temp - 273.15).replace(/[^-\d]+$/, ""), WEATHER_X + 31, ICON_Y + 12);
+      g.drawString(locale.temp(weather.temp - 273.15).replace(/[^-\d]+$/, ""), WEATHER_X + 27, ICON_Y + 12);
     } else {
-      icon(0, WEATHER_X + 13, ICON_Y + 3); // no forecast: it's sunny in the valley
+      icon(0, WEATHER_X + 10, ICON_Y + 3); // no forecast: it's sunny in the valley
     }
     let m = d.getMonth();
     icon(m >= 2 && m <= 4 ? 6 : m >= 5 && m <= 7 ? 7 : m >= 8 && m <= 10 ? 8 : 9, SEASON_X, ICON_Y + 3);
     icon(10 + luck(d), LUCK_X, ICON_Y + 3);
 
-    // Time, with am/pm and the battery in a column on the right
+    // Time, with am/pm in the bottom right corner
     let h = d.getHours();
-    let right = TIME_X1 - 16;
+    let right = TIME_X1;
     if (is12Hour) {
+      right -= 13;
       g.setColor(0, 0, 0).setFont("6x8").setFontAlign(0, 0);
-      g.drawString(h < 12 ? "am" : "pm", right + 7, TIME_Y - 7);
+      g.drawString(h < 12 ? "am" : "pm", right + 6, TIME_Y + 7);
       h = h % 12 || 12;
     }
-    let bat = E.getBattery();
-    g.setColor(0, 0, 0).drawRect(right + 1, TIME_Y + 2, right + 13, TIME_Y + 8).fillRect(right + 14, TIME_Y + 4, right + 14, TIME_Y + 6);
-    g.setColor(bat > 30 ? "#0f0" : bat > 15 ? "#ff0" : "#f00").fillRect(right + 2, TIME_Y + 3, right + 2 + Math.round(bat / 10), TIME_Y + 7);
     g.setColor(0, 0, 0).setFont("8x16", 2).setFontAlign(0, 0);
     g.drawString(h + ":" + ("0" + d.getMinutes()).substr(-2), (TIME_X0 + right) / 2, TIME_Y + 1);
+
+    // Battery as the energy bar: fills from the bottom, green to red
+    let bat = E.getBattery();
+    g.setFont("8x16").drawString("E", 164, 12);
+    g.setColor(bat > 50 ? "#0f0" : bat > 20 ? "#ff0" : "#f00");
+    g.fillRect(ENERGY_X0, ENERGY_Y1 - Math.round((ENERGY_Y1 - ENERGY_Y0) * bat / 100), ENERGY_X1, ENERGY_Y1);
 
     // Today's steps as gold
     g.setColor(1, 1, 0).fillCircle(17, GOLD_Y - 1, 8).setColor(0, 0, 0).drawCircle(17, GOLD_Y - 1, 8);
     g.setFont("8x16").setFontAlign(0, 0).drawString("G", 17, GOLD_Y);
-    let steps = String(Math.min(Bangle.getHealthStatus("day").steps, 99999999));
+    let steps = String(Math.min(Bangle.getHealthStatus("day").steps, 9999999));
     g.setColor(1, 0, 0);
     for (let i = 0; i < steps.length; i++)
       g.drawString(steps[i], GOLD_X + (DIGITS - steps.length + i) * DIGIT_W + 7, GOLD_Y);
@@ -115,13 +123,17 @@
     }
   };
 
+  let onCharging = () => draw();
+
   Bangle.on("lcdPower", onLcd);
+  Bangle.on("charging", onCharging);
   Bangle.setUI({
     mode: "clock",
     remove: function() {
       if (drawTimeout) clearTimeout(drawTimeout);
       drawTimeout = undefined;
       Bangle.removeListener("lcdPower", onLcd);
+      Bangle.removeListener("charging", onCharging);
       require("widget_utils").show();
     }
   });

@@ -2,7 +2,7 @@
 
 A watch face styled on the Stardew Valley HUD.
 
-![](screenshot.png)
+![](screenshot.png) ![](screenshot2.png)
 
 ## What it shows
 
@@ -16,18 +16,27 @@ A watch face styled on the Stardew Valley HUD.
 * **Season**: spring, summer, fall or winter, by month (northern hemisphere).
 * **Daily luck**: a spirit that's happy, neutral or grumpy. It changes
   once a day.
-* **Time**: follows the 12/24 hour setting, with the battery level beside it.
+* **Time**: follows the 12/24 hour setting.
+* **Energy**: the bar on the right is the battery. It turns yellow below
+  50% and red below 20%.
 * **Gold**: today's step count.
 
 ## Controls
 
 Swipe down to show widgets. Press the button to open the launcher.
 
+## Settings
+
+In Settings > Apps > Stardew Clock, choose the **Background**:
+
+* **Mountains** (default): the valley's green peaks under a night sky
+* **Farm**: a daytime sky with the farmhouse, fence and a chicken
+
 ## Artwork
 
-The background and icons are drawn with a Pillow script and
+The backgrounds and icons are drawn with a Pillow script and
 converted to 3-bit images with EspruinoWebTools' image converter. The
-background uses ordered dithering to approximate the game's browns and
+backgrounds use ordered dithering to approximate the game's browns and
 creams on the 8-colour screen.
 
 ## Creator
